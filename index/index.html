@@ -1,0 +1,482 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>Gambler Match Casino</title>
+    <style>
+		body {
+			background-image: url(big_table.jpg);
+			margin-top: 480px;
+            margin-left: 240px;
+		}
+		form {
+			width:330px;
+			margin:100px;
+			padding:20px;
+		}
+		.AVerdanaYellow {
+			font-family: Verdana, sans-serif;
+			font-size: 14pt;
+			line-height: 13pt;
+			font-style: normal;
+			color: #ffff00;
+			font-weight: light;
+			text-align: left;
+		}
+        
+        .level-up {
+            position: relative;
+            top: 74px;
+            right: 74px;
+            visibility: hidden;
+        }
+        
+        #container{
+            color: #faff00
+            width: 100%;
+            text-align: center;
+        }
+        
+        #left{
+           color: #faff00
+           float: left;
+           width: 100px;
+        }
+        
+        #time{
+            color: #faff00
+            float: right;
+            width: 100px;
+        }
+        
+        #game-data{
+            text-align: center;
+        }
+        
+        #subs{
+            margin-left: 420px;
+        }
+        
+        #queen-comment{
+            margin-left: 820px;
+            padding: 5px;
+            background-color: indianred;
+            float: left;
+        }
+        
+
+        
+    </style>
+    
+    <script>
+	var context;
+    
+    // Some game variables
+    var showingHardmodeButton = false;
+    var gameOver = false;
+    var hardmode = false;
+	var firstPick = true;
+	var firstCard = -1;
+	var secondCard;
+    var deck = [];
+    var starttime;
+    var count = 0;
+    var tid; // still don't know what it is
+    
+    
+	//cardBack = new Image();
+	//cardBack.src = "2.png";
+	var backColor = "rgb(0,128,0)";
+	var tableColor = "rgb(67,151,105)"; //same color as green table
+	var textColor = "rgb(255,255,0)";
+	
+	var firstsx = 130;
+	var firstsy = 50;
+	var margin = 35;
+	var cardwidth = 100;
+	var cardheight = 120;
+    
+	var matched;
+    var levelTime = ((hardmode) ? 30 : 60);
+
+    // the list of Queen's comments
+    var commentList = ["Ooo damn!","these kids are just your playing toys, haha","the queen can be creepy too!","your mother would be proud of you for playing this instead of filing taxes, johnny","my, my...","Kenny should not have come here.", "Damn you, liberal","*&^!","Who camps in their backyard?","I hate minnesota weather","I wanna go on a vacation to super 8","subscribe to barbie's life: https://www.youtube.com/c/Barbie%E2%80%99sLife", "Have fun!","I hate children","Who wants to air drop battle", "London is on fire", "Barnum", "I lost my minnesota tough", "Florida man jumps in front of you in the McDonald's line and steals your 9 person order after crashing into the wall of the store", "Hello, step-bro", "Sammy is a duck","You know my name but not my story", "Why does it always snow in April????", "Sometimes I get so high, falling is the only out I see, and I don't want to take you down with me (One of the saddest Illenium songs, because Illenium has a lot of sad shit - Jakop)"];
+     
+	var picturePairs = [
+		["people/leeml.jpg","people/leeml_2.jpg"],
+	    ["people/mcmurray.jpg","people/mcmurray_2.jpg"],
+	    ["people/mosallam.jpg","people/mosallam_2.jpg"],
+	    ["people/vop.jpg","people/vop_2.jpg"],
+	    ["people/yangl.jpg","people/yangl_2.jpg"],
+        ["people/jacob_1.jpg","people/jacob_2.jpg"],
+        ["people/fuad_1.jpg","people/fuad_2.jpg"],
+        ["people/lucas_1.jpg","people/lucas_2.jpg"],
+        ["people/bald_sam_1.jpg","people/bald_sam_2.jpg"],
+        ["people/hayden_1.jpg","people/hayden_2.jpg"],
+        ["people/dora_1.jpg","people/dora_2.jpg"],
+        ["people/bald_david_1.jpg","people/bald_david_2.jpg"],
+        ["people/ded_sam_1.jpg","people/ded_sam_2.jpg"],
+        ["people/cursed_jake_1.jpg","people/cursed_jake_2.jpg"],
+        ["people/cursed_sam_3.jpg","people/cursed_sam_4.jpg"],
+        ["people/cursed_josh_1.jpg","people/cursed_josh_2.jpg"]
+	];
+    
+    // list to hold all card backs
+    var all_cards = ["cards/1.png","cards/2.png","cards/3.png","cards/4.png","cards/5.png","cards/6.png","cards/7.png","cards/8.png","cards/9.png","cards/10.png","cards/11.png"];
+ 
+// a chance function to determine whether the Queen comments or not
+function generateQueenComment(){
+    // generate the chance of the queen saying something
+    var commentChance = Math.random()*100;
+    if (commentChance<65){
+        // generate the comment number queen will say
+        var commentNum = Math.floor(Math.random()*commentList.length);
+        var comment = commentList[commentNum];
+        document.getElementById("queen-comment").innerHTML = comment;
+    }
+    
+}
+
+        
+        
+ 
+ 
+// Function to refresh time every second
+function refreshTime() {
+    // Time refresh variables
+    var timeDisplay = document.getElementById("time");
+    var timeInt = Math.floor((new Date().getTime()/1000) - starttime)
+    timeDisplay.innerHTML = timeInt;
+    
+    // if timer is out, flip the cards, stop the game
+    if (timeInt > levelTime && !gameOver){
+        
+        // clear the canvas
+        context.clearRect(0,0,1300,450);
+        
+        gameOver = true;
+        
+        // show the cards
+        for (i = 0; i < deck.length; i++){
+            context.drawImage(deck[i].img,deck[i].sx,deck[i].sy,deck[i].swidth,deck[i].sheight);
+        }
+        
+        context.fillStyle= tableColor;
+        //context.fillRect(0,0,900,400);
+        context.fillStyle=textColor;
+        out = "Time ran out!";
+        context.fillText(out,365,30);
+        context.fillText("Reload page to play it again.",840,345);
+        return;
+    }
+}
+    
+function playSound(soundfile_ogg, soundfile_mp, soundfile_ma) {
+    if ("Audio" in window) {
+        var a = new Audio();
+        if (!!(a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"')
+                .replace(/no/, '')))
+            a.src = soundfile_ogg;
+        else if (!!(a.canPlayType && a.canPlayType('audio/mpeg;').replace(/no/,
+                '')))
+            a.src = soundfile_mp;
+        else if (!!(a.canPlayType && a.canPlayType(
+                'audio/mp4; codecs="mp4a.40.2"').replace(/no/, '')))
+            a.src = soundfile_ma;
+        else
+            a.src = soundfile_mp;
+
+        a.autoplay = true;
+        return;
+    } else {
+        alert("Time almost up");
+    }
+}
+	
+// deck holds card info:  location and dimensions, picture source,
+// and identifying info is set using the 2-d array in the Matrix function
+function Card(sx,sy,swidth,sheight, img, bg_img, info) {
+	this.sx = sx;
+	this.sy = sy;
+	this.swidth = swidth;
+	this.sheight = sheight;
+	this.info = info;
+	this.img = img;
+    this.bg_img = bg_img;
+	this.draw = replaceRect;
+}
+        
+function replaceRect() {
+    context.drawImage(this.bg_img, this.sx,this.sy,this.swidth,this.sheight);
+    //context.fillRect(this.sx,this.sy,this.swidth,this.sheight);
+}
+
+        
+//Function to generate a random int value
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+        
+//generate 6 pack of cards on the table
+function Matrix() {
+	var i;
+	var firstCard;
+	var secondCard;
+	var firstPicture;
+	var secondPicture;
+    
+	var cx = firstsx;
+	var cy = firstsy;
+    
+    // an array to store card numbers picked
+    var pickedCards = [];
+    
+    // determine the number of card pairs
+    var cardPairNumber = ((hardmode) ? 7 : 6);
+    
+	while(pickedCards.length < cardPairNumber) {
+        randomCardPick = getRandomInt(picturePairs.length);
+        
+        if (!pickedCards.includes(randomCardPick)){
+        
+            // pick & set the first card bg
+            randomCardBGPick = getRandomInt(all_cards.length);
+            var firstCardBG = new Image();
+            firstCardBG.src = all_cards[randomCardBGPick];
+        
+            // set the first card image
+            firstPicture = new Image();
+            firstPicture.src = picturePairs[randomCardPick][0];
+            firstCard = new Card(cx,cy,cardwidth,cardheight,firstPicture,firstCardBG,randomCardPick);
+            deck.push(firstCard);
+            
+            // pick & set the second card bg
+            randomCardBGPick = getRandomInt(all_cards.length);
+            var secondCardBG = new Image();
+            secondCardBG.src = all_cards[randomCardBGPick];
+            
+            // set the second card image
+            secondPicture = new Image();
+            secondPicture.src = picturePairs[randomCardPick][1];
+            secondCard = new Card(cx,cy+cardheight+margin,cardwidth,cardheight,secondPicture,secondCardBG,randomCardPick);
+            deck.push(secondCard);
+            
+            
+            cx = cx+cardwidth+ margin;
+            firstCard.draw();
+            secondCard.draw();
+            
+            pickedCards.push(randomCardPick);
+        }
+	}
+	
+}
+
+function randomizeCards() {
+	//resembles shuffling cards when playing the game of concentration
+	//swaps the changing information: the image and the info indicating a match
+	var a;
+	var b;
+	var holderInfo;
+	var holderImage;
+	var declen = deck.length
+	var nt;
+		for (nt=0;nt<3*declen;nt++) {  //do the swap 3 times deck.length times
+		  a = Math.floor(Math.random()*declen);
+		  b = Math.floor(Math.random()*declen);
+		  holderInfo = deck[a].info;
+		  holderImage = deck[a].img;
+		  deck[a].info = deck[b].info;
+		  deck[a].img = deck[b].img;
+		  deck[b].info = holderInfo;
+		  deck[b].img = holderImage;
+		}
+}
+
+
+function makeMatch(ev) {
+	var out;
+	var mx;
+	var my;
+	var firstChoice;
+	var secondChoice;
+	if ( ev.layerX ||  ev.layerX == 0) { // Firefox
+   			mx= ev.layerX;
+    		my = ev.layerY;
+  		} else if (ev.offsetX || ev.offsetX == 0) { // Opera
+    		mx = ev.offsetX;
+    		my = ev.offsetY;
+  		}
+	var i;
+	for (i=0;i<deck.length;i++){
+		var card = deck[i];
+		if (card.sx >=0)  //this is the way to avoid checking for clicking on this space
+		if ((mx>card.sx)&&(mx<card.sx+card.swidth)&&(my>card.sy)&&(my<card.sy+card.sheight)) {
+			//check that this isn't clicking on first card
+			if ((firstPick)|| (i!=firstCard)) {
+				break;}
+		}
+	}
+	if (i<deck.length) {  //clicked on a card
+		if (firstPick) {
+			firstCard = i;
+			firstPick = false;
+			context.drawImage(card.img,card.sx,card.sy,card.swidth,card.sheight);
+		}
+		else {
+			secondCard = i;
+			context.drawImage(card.img,card.sx,card.sy,card.swidth,card.sheight);
+			
+		  	if (card.info==deck[firstCard].info) {
+				matched = true;
+               
+                count++;
+                
+                //context.fillRect(10,340,900,100);
+				context.fillStyle=textColor;
+				// replaced line
+				context.fillText("*",520+count*8,350);
+                // generate the comment and make queen say it
+                generateQueenComment();
+				if (count>= .5*deck.length) {
+                    
+                    // clear the canvas
+                    context.clearRect(0,0,1300,450);
+                    
+                    
+                    // Set the gameOver to true
+                    gameOver = true;
+                    
+                    // Woodoo games with time
+					var now = new Date();
+					var nt = Number(now.getTime());
+					var seconds = Math.floor(.5+(nt-(starttime*1000))/1000);
+                    
+                    // Card bg
+					context.fillStyle= tableColor;
+					context.fillRect(0,0,1300,450);
+					context.fillStyle=textColor;
+                    
+                    // Output finish time message
+					out = "You finished in "+String(seconds)+ " secs.";
+					context.fillText(out,365,30);
+                    
+                    // Show HardMode Button if it is not hardmode already
+                    if (!hardmode){
+                        toggleButton();
+                    }
+                    
+                    return;
+				}
+				
+			}
+			else {
+				matched = false;
+			}
+			firstPick = true;
+            
+//            if (hardmode){
+//                tid = setTimeout(cardRevert, 250);
+//            } else {
+                tid = setTimeout(cardRevert, 500)
+//            }
+            
+		}
+	}
+}
+
+function cardRevert() {
+	var card;
+	if (!matched) {
+        deck[firstCard].draw();
+        deck[secondCard].draw();
+	}
+	else {
+		context.fillStyle = tableColor;
+		context.fillRect(deck[secondCard].sx,deck[secondCard].sy,deck[secondCard].swidth,deck[secondCard].sheight);
+		context.fillRect(deck[firstCard].sx,deck[firstCard].sy,deck[firstCard].swidth,deck[firstCard].sheight);
+		deck[secondCard].sx = -1;
+		deck[firstCard].sx = -1;
+	}
+}
+        
+function toggleButton(){
+    if(!showingHardmodeButton) {
+        document.getElementById('level_up').style.visibility = 'visible';
+        showingHardmodeButton = true;
+        
+    } else {
+        document.getElementById('level_up').style.visibility = 'hidden';
+        showingHardmodeButton = false;
+    }
+}
+        
+
+
+function createGame(){
+    // Enabling hardmode, if needed
+    if (hardmode){
+        gameOver = false;
+        firstPick = true;
+        firstCard = -1;
+        secondCard = -1;
+        count=0;
+        
+        // empty the deck
+        deck = [];
+        toggleButton();
+        
+   }
+    // set the level time
+    levelTime = ((hardmode) ? 30 : 60);
+    // play the song
+    playSound('gambler.mp3');
+   
+    // setup the canvas
+    context = document.getElementById('canvas').getContext('2d');
+    canvas1 = document.getElementById('canvas');
+    
+    // Clear the text in the BG
+    context.clearRect(0,0,1300,450);
+    
+    // set up the event listener
+    canvas1.addEventListener('click',makeMatch,false);
+    // Set up the matrix and randomize cards
+    Matrix();
+    randomizeCards();
+
+    // Text
+    context.font="14pt sans-serif";
+    context.fillStyle= textColor;
+    context.fillText("Click on two cards to attempt a match. You only have " + levelTime + " seconds.",30,30);
+    context.fillText("Number of matches so far: ",290,350);
+
+    // Woodoo with time
+    starttime = new Date();
+    // passing an anonimous func into the setInterval to pass time into the function // putting some lambda functions into CSC250 class, i feel badass ;)
+    setInterval( function() { refreshTime(); }, 1000 );
+    starttime = Number(starttime.getTime()/1000);
+}
+        
+
+
+
+
+</script>
+</head>
+    <body onload="createGame();" "window.resizeto(1300,800)"="">
+        <div id="game-data">
+            <p id="queen-comment"> --- Queen's comments --- </p>
+            <div id="container">
+                <h2 id="left">Timer:</h2>
+                <h2 id="time">0</h2>
+            </div>
+        </div>
+
+        <canvas id="canvas" width="1300" height="450">
+            Your browser doesn't support the HTML5 element canvas.
+        </canvas>
+        
+        
+        <button class="level-up" id="level_up" onclick="hardmode=true; createGame();">HARD MODE (level time is down from 60 to 30 seconds & 7 pairs)</button>
+        <br>
+
+    </body
+</html>
